@@ -1,26 +1,17 @@
-#include <iostream>
-#include <stdexcept>
-
 #include "ChiSim/chi_sim.h"
+#include <stdexcept>
 
 ChiSim ChiSim::m_instance;
 
-int main()
-{
-    auto& chi_sim = ChiSim::GetSystemScope();
+int main() {
+  auto& app = ChiSim::GetSystemScope();
 
-    try 
-    {
-      chi_sim.Initialize();
-      chi_sim.ExecuteRuntime();
-      chi_sim.Finalize();
-    }
-    catch (const std::exception& e) 
-    {
-      std::cerr << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    
+  try {
+    app.Execute();
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  }
 
-    return 0;
+  return EXIT_SUCCESS;
 }
