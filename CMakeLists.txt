@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.2)
 
+set(STD_ROOT "/Users/janv4/Desktop/Projects/STB/stb")
+
 set(TARGET app2)
 project(${TARGET} C CXX)
 
 include_directories("/usr/local/include")
+include_directories("${STD_ROOT}")
 
 link_directories("/usr/local/lib")
 
