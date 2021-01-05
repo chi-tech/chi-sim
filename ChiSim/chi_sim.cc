@@ -46,13 +46,13 @@ void ChiSim::CreateVulkanInstance()
   createInfo.pApplicationInfo = &appInfo;
 
   auto extensions = GetRequiredExtensions();
-  createInfo.enabledExtensionCount = extensions.size();
+  createInfo.enabledExtensionCount = (uint32_t)extensions.size();
   createInfo.ppEnabledExtensionNames = extensions.data();
 
   VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
   if (k_enable_validation_layers)
   {
-    createInfo.enabledLayerCount = k_validation_layers.size();
+    createInfo.enabledLayerCount = (uint32_t)k_validation_layers.size();
     createInfo.ppEnabledLayerNames = k_validation_layers.data();
 
     PopulateDebugMessengerCreateInfo(debugCreateInfo);
@@ -149,17 +149,17 @@ void ChiSim::CreateLogicalDevice()
   VkDeviceCreateInfo createInfo = {};
   createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-  createInfo.queueCreateInfoCount = queueCreateInfos.size();
+  createInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
   createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
   createInfo.pEnabledFeatures = &deviceFeatures;
 
-  createInfo.enabledExtensionCount = k_device_extensions.size();
+  createInfo.enabledExtensionCount = (uint32_t)k_device_extensions.size();
   createInfo.ppEnabledExtensionNames = k_device_extensions.data();
 
   if (k_enable_validation_layers)
   {
-    createInfo.enabledLayerCount = k_validation_layers.size();
+    createInfo.enabledLayerCount = (uint32_t)k_validation_layers.size();
     createInfo.ppEnabledLayerNames = k_validation_layers.data();
   }
   else
@@ -338,7 +338,7 @@ void ChiSim::CreateGraphicsPipeline() {
   auto attributeDescriptions = Vertex::GetAttributeDescriptions();
 
   vertexInputInfo.vertexBindingDescriptionCount = 1;
-  vertexInputInfo.vertexAttributeDescriptionCount = attributeDescriptions.size();
+  vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t)attributeDescriptions.size();
   vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
   vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
@@ -760,15 +760,15 @@ void ChiSim::CreateDescriptorPool()
 
   std::array<VkDescriptorPoolSize, 2> poolSizes = {};
   poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  poolSizes[0].descriptorCount = m_swap_chain_images.size();
+  poolSizes[0].descriptorCount = (uint32_t)m_swap_chain_images.size();
   poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  poolSizes[1].descriptorCount = m_swap_chain_images.size();
+  poolSizes[1].descriptorCount = (uint32_t)m_swap_chain_images.size();
 
   VkDescriptorPoolCreateInfo poolInfo = {};
   poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  poolInfo.poolSizeCount = poolSizes.size();
+  poolInfo.poolSizeCount = (uint32_t)poolSizes.size();
   poolInfo.pPoolSizes = poolSizes.data();
-  poolInfo.maxSets = m_swap_chain_images.size();
+  poolInfo.maxSets = (uint32_t)m_swap_chain_images.size();
 
   if (vkCreateDescriptorPool(m_device,
                              &poolInfo,
@@ -788,7 +788,7 @@ void ChiSim::CreateDescriptorSets()
   VkDescriptorSetAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
   allocInfo.descriptorPool = m_descriptor_pool;
-  allocInfo.descriptorSetCount = num_swap_images;
+  allocInfo.descriptorSetCount = (uint32_t)num_swap_images;
   allocInfo.pSetLayouts = layouts.data();
 
   m_descriptor_sets.resize(num_swap_images);
@@ -836,7 +836,7 @@ void ChiSim::CreateDescriptorSets()
     descriptorWrites[1].pImageInfo = &imageInfo;
 
     vkUpdateDescriptorSets(m_device,
-                           descriptorWrites.size(),
+                           (uint32_t)descriptorWrites.size(),
                            descriptorWrites.data(), 0, nullptr);
   }
 }

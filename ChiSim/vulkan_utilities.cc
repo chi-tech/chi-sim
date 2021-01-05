@@ -358,7 +358,7 @@ void ChiSim::CreateDescriptorSetLayout()
     {uboLayoutBinding, samplerLayoutBinding};
   VkDescriptorSetLayoutCreateInfo layoutInfo = {};
   layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layoutInfo.bindingCount = bindings.size();
+  layoutInfo.bindingCount = (uint32_t)bindings.size();
   layoutInfo.pBindings = bindings.data();
 
   if (vkCreateDescriptorSetLayout(m_device,
