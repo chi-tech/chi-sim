@@ -52,8 +52,10 @@ link_directories("${VK_SDK_PATH}/lib")
 set(LIBS glfw3 vulkan-1)
 
 set(SOURCES "main.cc" )
-set(SOURCES ${SOURCES} ChiSim/chi_sim.cc)
-set(SOURCES ${SOURCES} ChiSim/vulkan_utilities.cc)
+add_subdirectory("${PROJECT_SOURCE_DIR}/ChiSim")
+
+#set(SOURCES ${SOURCES} ChiSim/chi_sim.cc)
+#set(SOURCES ${SOURCES} ChiSim/vulkan_utilities.cc)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
