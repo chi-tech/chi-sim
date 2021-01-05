@@ -230,22 +230,29 @@ private:
     CreateMainWindowSurface();
     PickPhysicalDevice();
     CreateLogicalDevice();
+
     CreateSwapChain();
-    CreateImageViews();
     CreateRenderPass();
-    CreateDescriptorSetLayout();
+
+    CreateDescriptorSetLayout(); //once-off
     CreateGraphicsPipeline();
-    CreateFramebuffers();
-    CreateCommandPool();
-    CreateDepthResources();
+    CreateCommandPool(); //once-off
+
     CreateTextureImage();
     CreateTextureImageView();
-    CreateTextureSampler();
+//    CreateTextureSampler();
     CreateVertexBuffer();
     CreateIndexBuffer();
+
+    CreateTextureSampler();
+
+    CreateDepthResources();
+    CreateFramebuffers();
     CreateUniformBuffers();
     CreateDescriptorPool();
     CreateDescriptorSets();
+
+
     CreateCommandBuffers();
     CreateSyncObjects();
   }
@@ -261,24 +268,31 @@ private:
     vkDeviceWaitIdle(m_device);
   }
 
-  void cleanupSwapChain() {
-    for (auto framebuffer : m_swap_chain_framebuffers) {
-      vkDestroyFramebuffer(m_device, framebuffer, nullptr);
-    }
+  void cleanupSwapChain()
+  {
+    vkDestroyImageView(m_device, m_depth_image_view, nullptr);
+    vkDestroyImage(m_device, m_depth_image, nullptr);
+    vkFreeMemory(m_device, m_depth_image_memory, nullptr);
 
-    vkFreeCommandBuffers(m_device, m_command_pool, static_cast<uint32_t>(m_command_buffers.size()), m_command_buffers.data());
+    for (auto framebuffer : m_swap_chain_framebuffers)
+      vkDestroyFramebuffer(m_device, framebuffer, nullptr);
+
+    vkFreeCommandBuffers(m_device,
+                         m_command_pool,
+                         m_command_buffers.size(),
+                         m_command_buffers.data());
 
     vkDestroyPipeline(m_device, m_graphics_pipeline, nullptr);
     vkDestroyPipelineLayout(m_device, m_pipeline_layout, nullptr);
     vkDestroyRenderPass(m_device, m_render_pass, nullptr);
 
-    for (auto imageView : m_swap_chain_image_views) {
+    for (auto imageView : m_swap_chain_image_views)
       vkDestroyImageView(m_device, imageView, nullptr);
-    }
 
     vkDestroySwapchainKHR(m_device, m_swap_chain, nullptr);
 
-    for (size_t i = 0; i < m_swap_chain_images.size(); i++) {
+    for (size_t i = 0; i < m_swap_chain_images.size(); i++)
+    {
       vkDestroyBuffer(m_device, m_uniform_buffers[i], nullptr);
       vkFreeMemory(m_device, m_uniform_buffers_memory[i], nullptr);
     }
@@ -338,9 +352,10 @@ private:
     cleanupSwapChain();
 
     CreateSwapChain();
-    CreateImageViews();
     CreateRenderPass();
     CreateGraphicsPipeline();
+
+    CreateDepthResources();
     CreateFramebuffers();
     CreateUniformBuffers();
     CreateDescriptorPool();
@@ -358,7 +373,6 @@ private:
   void PickPhysicalDevice();
   void CreateLogicalDevice();
   void CreateSwapChain();
-  void CreateImageViews();
   void CreateRenderPass();
   void CreateGraphicsPipeline();
   void CreateFramebuffers();
@@ -374,100 +388,14 @@ private:
   void CreateUniformBuffers();
   void CreateCommandBuffers();
   void CreateSyncObjects();
-  void DrawFrame()
-  {
-    vkWaitForFences(m_device,
-                    1,
-                    &m_in_flight_fences[m_current_frame],
-                    VK_TRUE,
-                    UINT64_MAX);
-
-    uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(
-      m_device,
-      m_swap_chain,
-      UINT64_MAX,
-      m_image_available_semaphores[m_current_frame],
-      VK_NULL_HANDLE,
-      &imageIndex);
-
-    if (result == VK_ERROR_OUT_OF_DATE_KHR)
-      { recreateSwapChain(); return; }
-    else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
-      throw std::runtime_error("failed to acquire swap chain image!");
-
-    if (m_images_in_flight[imageIndex] != VK_NULL_HANDLE)
-      vkWaitForFences(m_device,
-                      1,
-                      &m_images_in_flight[imageIndex],
-                      VK_TRUE,
-                      UINT64_MAX);
-
-    m_images_in_flight[imageIndex] = m_in_flight_fences[m_current_frame];
-
-    UpdateUniformBuffer(imageIndex);
-
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-    VkSemaphore waitSemaphores[] =
-      {m_image_available_semaphores[m_current_frame]};
-    VkPipelineStageFlags waitStages[] =
-      {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
-
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &m_command_buffers[imageIndex];
-
-    VkSemaphore signalSemaphores[] =
-      {m_render_finished_semaphores[m_current_frame]};
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
-
-    vkResetFences(m_device, 1, &m_in_flight_fences[m_current_frame]);
-
-    if (vkQueueSubmit(m_graphics_queue,
-                      1,
-                      &submitInfo,
-                      m_in_flight_fences[m_current_frame]) != VK_SUCCESS)
-      throw std::runtime_error("failed to submit draw command buffer!");
-
-    VkPresentInfoKHR presentInfo = {};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
-
-    VkSwapchainKHR swapChains[] = {m_swap_chain};
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapChains;
-
-    presentInfo.pImageIndices = &imageIndex;
-
-    result = vkQueuePresentKHR(m_present_queue, &presentInfo);
-
-    if (result == VK_ERROR_OUT_OF_DATE_KHR ||
-        result == VK_SUBOPTIMAL_KHR ||
-        m_framebuffer_resized)
-    {
-      m_framebuffer_resized = false;
-      recreateSwapChain();
-    }
-    else if (result != VK_SUCCESS)
-      throw std::runtime_error("failed to present swap chain image!");
-
-    m_current_frame = (m_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
-  }
+  void DrawFrame();
 
   VkShaderModule CreateShaderModule(const std::vector<char>& code);
-
   VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 
   VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 
-  VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+  VkExtent2D GetSurface2DExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
   SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
 
@@ -523,11 +451,21 @@ private:
                          uint32_t height);
 
   void CreateTextureImageView();
-  VkImageView CreateImageView(VkImage image, VkFormat format);
+  VkImageView CreateImageView(VkImage image,
+                              VkFormat format,
+                              VkImageAspectFlags aspect_flags=
+                                VK_IMAGE_ASPECT_COLOR_BIT);
 
   void CreateTextureSampler();
 
   void CreateDepthResources();
+
+  VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates,
+                               VkImageTiling tiling,
+                               VkFormatFeatureFlags features);
+
+  VkFormat FindDepthFormat();
+  bool HasStencilComponent(VkFormat format);
 };
 
 #endif
